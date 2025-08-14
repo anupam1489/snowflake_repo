@@ -1,0 +1,678 @@
+--create table DWH.ETL.DAILY_DATA as select * from 
+------------------------------------------------------------------------------------------------------
+--control table -- list all the stored procs to be executed as part of the glue job on a daily basis
+CREATE DATABASE DWH;
+CREATE SCHEMA ETL;
+USE SCHEMA ETL;
+
+create table ETL.JOB_CONTROL
+(
+SEQ_NO NUMBER autoincrement start 1 increment 1,
+GLUE_JOB_NAME varchar(2000),
+PROC_NAME varchar(2000),
+PARAM_LIST VARCHAR(2000),
+PARAM_FUNCTION VARCHAR(2000),
+PROC_SEQ NUMBER,
+RUN_FLAG VARCHAR(1),
+FAIL_ON_EXCEPTION VARCHAR(1),
+OWNER_NAME varchar(2000),
+CREATED_BY VARCHAR(2000),
+CREATED_ON DATE
+);
+
+---------execution log table -- logs all the etl executions for the particular glue job daily basis --------
+create table ETL.JOB_CONTROL_EXECUTION_LOG
+(
+SEQ_NO NUMBER,
+RUN_DATE date,
+GLUE_JOB_NAME varchar(2000),
+PROC_NAME varchar(2000),
+START_TIME timestamp,
+END_TIME timestamp,
+STATUS varchar(2000),
+OUTPUT_LOG varchar(16777200),
+ERROR_LOG varchar(16777200),
+PARAM_LIST VARCHAR(2000),
+PARAM_FUNCTION VARCHAR(2000),
+PROC_SEQ NUMBER,
+RUN_FLAG VARCHAR(1),
+OWNER_NAME varchar(2000),
+CREATED_BY VARCHAR(2000),
+CREATED_ON DATE
+);
+
+
+------ create seq for log table -----
+CREATE OR REPLACE SEQUENCE ETL.ETL_SEQ START = 1 INCREMENT = 1;
+
+-------------
+insert into ETL.JOB_CONTROL
+ (GLUE_JOB_NAME,PROC_NAME,PARAM_LIST,PARAM_FUNCTION,PROC_SEQ,RUN_FLAG,OWNER_NAME,CREATED_BY,CREATED_ON,FAIL_ON_EXCEPTION)
+values ('new_delta_records_load_dev','SP_EXECUTE_LOADS','message','','1','Y','ANUPAM.PAL@HTC.COM','Anupam Pal',sysdate(),'N');
+
+insert into ETL.JOB_CONTROL
+ (GLUE_JOB_NAME,PROC_NAME,PARAM_LIST,PARAM_FUNCTION,PROC_SEQ,RUN_FLAG,OWNER_NAME,CREATED_BY,CREATED_ON,FAIL_ON_EXCEPTION)
+values ('invoce_records_load_dev','dwh.etl.SP_LOAD_DIM','message','','5','Y','ANUPAM.PAL@HTC.COM','Anupam Pal',sysdate(),'N');
+
+insert into ETL.JOB_CONTROL
+ (GLUE_JOB_NAME,PROC_NAME,PARAM_LIST,PARAM_FUNCTION,PROC_SEQ,RUN_FLAG,OWNER_NAME,CREATED_BY,CREATED_ON,FAIL_ON_EXCEPTION)
+values ('invoce_records_load_dev','dwh.etl.SP_LOAD_DIM_TWO','message','','5','Y','ANUPAM.PAL@HTC.COM','Anupam Pal',sysdate(),'N');
+
+insert into ETL.JOB_CONTROL
+ (GLUE_JOB_NAME,PROC_NAME,PARAM_LIST,PARAM_FUNCTION,PROC_SEQ,RUN_FLAG,OWNER_NAME,CREATED_BY,CREATED_ON,FAIL_ON_EXCEPTION)
+values ('invoce_records_load_dev','dwh.etl.SP_LOAD_DIM_THREE','message','','5','Y','ANUPAM.PAL@HTC.COM','Anupam Pal',sysdate(),'N');
+
+insert into ETL.JOB_CONTROL
+ (GLUE_JOB_NAME,PROC_NAME,PARAM_LIST,PARAM_FUNCTION,PROC_SEQ,RUN_FLAG,OWNER_NAME,CREATED_BY,CREATED_ON,FAIL_ON_EXCEPTION)
+values ('invoce_records_load_dev','dwh.etl.SP_LOAD_FACT','message','','5','Y','ANUPAM.PAL@HTC.COM','Anupam Pal',sysdate(),'N');
+
+----------------------------objects for ETL------------------
+---------test ETL table--
+create or replace table collision_report_table (value_1 text, value_2 text, value_3 timestamp);
+
+---test proc
+CREATE OR REPLACE PROCEDURE dwh.etl.SP_LOAD_DIM(message VARCHAR)
+RETURNS VARCHAR NOT NULL
+LANGUAGE SQL
+AS
+$$
+BEGIN
+  insert into collision_report_table values ('DIM 1', 'SP_LOAD_DIM', '2023-01-25 17:10:00'::timestamp), ('G2', 'At fault', sysdate()::timestamp);
+  RETURN message;
+END;
+$$
+;
+
+CREATE OR REPLACE PROCEDURE dwh.etl.SP_LOAD_DIM_TWO(message VARCHAR)
+RETURNS VARCHAR NOT NULL
+LANGUAGE SQL
+AS
+$$
+BEGIN
+  insert into collision_report_table values ('DIM 2', 'SP_LOAD_DIM_TWO', '2023-01-25 17:10:00'::timestamp), ('G2', 'At fault', sysdate()::timestamp);
+  insert into collision_report_table values ('DIM 2', 'SP_LOAD_DIM_TWO', '2023-01-25 17:10:00'::timestamp), ('G2', 'At fault', sysdate()::timestamp);
+  insert into collision_report_table values ('DIM 2', 'SP_LOAD_DIM_TWO', '2023-01-25 17:10:00'::timestamp), ('G2', 'At fault', sysdate()::timestamp);
+  insert into collision_report_table values ('DIM 2', 'SP_LOAD_DIM_TWO', '2023-01-25 17:10:00'::timestamp), ('G2', 'At fault', sysdate()::timestamp);
+  insert into collision_report_table values ('DIM 2', 'SP_LOAD_DIM_TWO', '2023-01-25 17:10:00'::timestamp), ('G2', 'At fault', sysdate()::timestamp);
+  insert into collision_report_table values ('DIM 2', 'SP_LOAD_DIM_TWO', '2023-01-25 17:10:00'::timestamp), ('G2', 'At fault', sysdate()::timestamp);
+  insert into collision_report_table values ('DIM 2', 'SP_LOAD_DIM_TWO', '2023-01-25 17:10:00'::timestamp), ('G2', 'At fault', sysdate()::timestamp);
+  insert into collision_report_table values ('DIM 2', 'SP_LOAD_DIM_TWO', '2023-01-25 17:10:00'::timestamp), ('G2', 'At fault', sysdate()::timestamp);
+  insert into collision_report_table values ('DIM 2', 'SP_LOAD_DIM_TWO', '2023-01-25 17:10:00'::timestamp), ('G2', 'At fault', sysdate()::timestamp);
+  
+  RETURN message;
+END;
+$$
+;
+
+CREATE OR REPLACE PROCEDURE dwh.etl.SP_LOAD_DIM_THREE(message VARCHAR)
+RETURNS VARCHAR NOT NULL
+LANGUAGE SQL
+AS
+$$
+BEGIN
+  insert into collision_report_table values ('DIM 3', 'SP_LOAD_DIM_THREE', '2023-01-25 17:10:00'::timestamp), ('G2', 'At fault', sysdate()::timestamp);
+  RETURN message;
+END;
+$$
+;
+
+CREATE OR REPLACE PROCEDURE dwh.etl.SP_LOAD_FACT(message VARCHAR)
+RETURNS VARCHAR NOT NULL
+LANGUAGE SQL
+AS
+$$
+BEGIN
+  insert into collision_report_table values ('FACT', 'SP_LOAD_FACT', '2023-01-25 17:10:00'::timestamp), ('G2', 'At fault', sysdate()::timestamp);
+  insert into collision_report_table values ('FACT', 'SP_LOAD_FACT', '2023-01-25 17:10:00'::timestamp), ('G2', 'At fault', sysdate()::timestamp);
+  insert into collision_report_table values ('FACT', 'SP_LOAD_FACT', '2023-01-25 17:10:00'::timestamp), ('G2', 'At fault', sysdate()::timestamp);
+  insert into collision_report_table values ('FACT', 'SP_LOAD_FACT', '2023-01-25 17:10:00'::timestamp), ('G2', 'At fault', sysdate()::timestamp);
+  insert into collision_report_table values ('FACT', 'SP_LOAD_FACT', '2023-01-25 17:10:00'::timestamp), ('G2', 'At fault', sysdate()::timestamp);
+  RETURN message;
+END;
+$$
+;
+
+--------------------main SP of the framework---------------------
+----------Framework SP --create stored proc to execute the jobs -----------
+create or replace procedure execute_stored_procs_sp(glue_job_name text)
+returns text
+language sql
+as
+$$
+declare
+  my_exception EXCEPTION (-20002, 'Raised MY_EXCEPTION.');
+  job_cursor cursor for select proc_name||'('''||param_list||''')' as prc,seq_no,GLUE_JOB_NAME,PROC_NAME,PARAM_LIST,PARAM_FUNCTION,PROC_SEQ,RUN_FLAG
+  ,OWNER_NAME,CREATED_BY,CREATED_ON from ETL.JOB_CONTROL where lower(glue_job_name ) = ? and upper(run_flag)='Y' order by PROC_SEQ;
+  etl_seq number;
+  JOB_ID DEFAULT ( SELECT ETL_SEQ.NEXTVAL );
+  my_id text;
+  my_label text;
+  my_sql text;
+  V_MESSAGE_OUTPUT text default 'Completed';
+  V_SEQ_NO  number;
+  V_RUN_DATE  default sysdate();
+  V_GLUE_JOB_NAME  text;
+  V_PROC_NAME  text;
+  V_START_TIME  timestamp;
+  V_END_TIME  timestamp;
+  V_STATUS  text;
+  V_OUTPUT_LOG  text;
+  V_ERROR_LOG  text;
+  V_PARAM_LIST  text;
+  V_PARAM_FUNCTION  text;
+  V_PROC_SEQ  text;
+  V_RUN_FLAG  text;
+  V_OWNER_NAME  text;
+  V_CREATED_BY  text;
+  V_CREATED_ON  date;
+begin
+  open job_cursor using (glue_job_name);
+  for myrow in job_cursor do
+      V_SEQ_NO:= JOB_ID ;
+      V_GLUE_JOB_NAME  := myrow.GLUE_JOB_NAME;
+      V_PROC_NAME  := myrow.PROC_NAME;
+      V_START_TIME  :=sysdate();
+      V_END_TIME  :=null;
+      V_STATUS  :='R';
+      V_OUTPUT_LOG  :=' running ';
+      V_ERROR_LOG  := ' none';
+      V_PARAM_LIST  := myrow.PARAM_LIST;
+      V_PARAM_FUNCTION  :=myrow.PARAM_FUNCTION;
+      V_PROC_SEQ  := myrow.PROC_SEQ;
+      V_RUN_FLAG  := myrow.RUN_FLAG;
+      V_OWNER_NAME  := myrow.owner_name;
+      V_CREATED_BY  := myrow.created_by;
+      V_CREATED_ON  := myrow.created_on;
+      my_sql := 'call '||myrow.prc;
+      
+      insert into JOB_CONTROL_EXECUTION_LOG values(:V_SEQ_NO,:V_RUN_DATE,:V_GLUE_JOB_NAME,:V_PROC_NAME,:V_START_TIME,:V_END_TIME,'R',:V_OUTPUT_LOG ,:V_ERROR_LOG ,:V_PARAM_LIST ,:V_PARAM_FUNCTION ,:V_PROC_SEQ ,:V_RUN_FLAG ,:V_OWNER_NAME,:V_CREATED_BY ,:V_CREATED_ON);
+      begin
+      execute immediate :my_sql;
+      UPDATE JOB_CONTROL_EXECUTION_LOG set STATUS='Y',END_TIME=sysdate(),OUTPUT_LOG=:V_MESSAGE_OUTPUT where SEQ_NO=:V_SEQ_NO and PROC_NAME=:V_PROC_NAME;
+      exception when other then
+        
+      UPDATE JOB_CONTROL_EXECUTION_LOG set STATUS='F',END_TIME=sysdate(),OUTPUT_LOG='FAILED',ERROR_LOG=:SQLERRM where SEQ_NO=:V_SEQ_NO and PROC_NAME=:V_PROC_NAME;
+      --RAISE;
+      end;
+      --
+
+      
+  end for;
+  close job_cursor;
+  return 'executed all jobs successfully for '||glue_job_name;
+EXCEPTION
+  WHEN statement_error THEN
+    RETURN OBJECT_CONSTRUCT('Error type', 'STATEMENT_ERROR',
+                            'SQLCODE', sqlcode,
+                            'SQLERRM', sqlerrm,
+                            'SQLSTATE', sqlstate);
+  WHEN my_exception THEN
+    RETURN OBJECT_CONSTRUCT('Error type', 'MY_EXCEPTION',
+                            'SQLCODE', sqlcode,
+                            'SQLERRM', sqlerrm,
+                            'SQLSTATE', sqlstate);
+  WHEN OTHER THEN
+    RETURN OBJECT_CONSTRUCT('Error type', 'Other error',
+                            'SQLCODE', sqlcode,
+                            'SQLERRM', sqlerrm,
+                            'SQLSTATE', sqlstate);  
+end;
+$$;
+
+----------v1
+create or replace procedure execute_stored_procs_sp(glue_job_name text)
+returns text
+language sql
+as
+$$
+declare
+  my_exception EXCEPTION (-20002, 'Raised MY_EXCEPTION.');
+  job_cursor cursor for select proc_name||'('''||param_list||''')' as prc,seq_no,GLUE_JOB_NAME,PROC_NAME,PARAM_LIST,PARAM_FUNCTION,PROC_SEQ,RUN_FLAG
+  ,OWNER_NAME,CREATED_BY,CREATED_ON from ETL.JOB_CONTROL where lower(glue_job_name ) = ? and upper(run_flag)='Y' order by PROC_SEQ;
+  etl_seq number;
+  JOB_ID DEFAULT ( SELECT ETL_SEQ.NEXTVAL );
+  my_id text;
+  my_label text;
+  my_sql text;
+  V_MESSAGE_OUTPUT text default 'Completed';
+  V_SEQ_NO  number;
+  V_RUN_DATE  default sysdate();
+  V_GLUE_JOB_NAME  text;
+  V_PROC_NAME  text;
+  V_START_TIME  timestamp;
+  V_END_TIME  timestamp;
+  V_STATUS  text;
+  V_OUTPUT_LOG  text;
+  V_ERROR_LOG  text;
+  V_PARAM_LIST  text;
+  V_PARAM_FUNCTION  text;
+  V_PROC_SEQ  text;
+  V_RUN_FLAG  text;
+  V_OWNER_NAME  text;
+  V_CREATED_BY  text;
+  V_CREATED_ON  date;
+  V_FAIL_ON_EXCEP text default 'N';
+  V_JOB_SEQ_NO number;
+begin
+  open job_cursor using (glue_job_name);
+  for myrow in job_cursor do
+      V_SEQ_NO:= JOB_ID ;
+      V_GLUE_JOB_NAME  := myrow.GLUE_JOB_NAME;
+      V_PROC_NAME  := myrow.PROC_NAME;
+      V_START_TIME  :=sysdate();
+      V_END_TIME  :=null;
+      V_STATUS  :='R';
+      V_OUTPUT_LOG  :=' running ';
+      V_ERROR_LOG  := ' none';
+      V_PARAM_LIST  := myrow.PARAM_LIST;
+      V_PARAM_FUNCTION  :=myrow.PARAM_FUNCTION;
+      V_PROC_SEQ  := myrow.PROC_SEQ;
+      V_RUN_FLAG  := myrow.RUN_FLAG;
+      V_OWNER_NAME  := myrow.owner_name;
+      V_CREATED_BY  := myrow.created_by;
+      V_CREATED_ON  := myrow.created_on;
+      my_sql := 'call '||myrow.prc;
+      V_JOB_SEQ_NO := myrow.seq_no;
+      insert into JOB_CONTROL_EXECUTION_LOG values(:V_SEQ_NO,:V_RUN_DATE,:V_GLUE_JOB_NAME,:V_PROC_NAME,:V_START_TIME,:V_END_TIME,'R',:V_OUTPUT_LOG ,:V_ERROR_LOG ,:V_PARAM_LIST ,:V_PARAM_FUNCTION ,:V_PROC_SEQ ,:V_RUN_FLAG ,:V_OWNER_NAME,:V_CREATED_BY ,:V_CREATED_ON);
+      begin
+      execute immediate :my_sql;
+      UPDATE JOB_CONTROL_EXECUTION_LOG set STATUS='Y',END_TIME=sysdate(),OUTPUT_LOG=:V_MESSAGE_OUTPUT where SEQ_NO=:V_SEQ_NO and PROC_NAME=:V_PROC_NAME;
+      exception when other then
+      V_FAIL_ON_EXCEP := (select FAIL_ON_EXCEPTION from ETL.JOB_CONTROL  where glue_job_name=:V_GLUE_JOB_NAME and proc_name=:V_PROC_NAME and seq_no=:V_JOB_SEQ_NO) ;  
+      UPDATE JOB_CONTROL_EXECUTION_LOG set STATUS='F',END_TIME=sysdate(),OUTPUT_LOG='FAILED V_FAIL_ON_EXCEP as '||:V_FAIL_ON_EXCEP,ERROR_LOG=:SQLERRM where SEQ_NO=:V_SEQ_NO and PROC_NAME=:V_PROC_NAME;
+      
+       if (V_FAIL_ON_EXCEP='Y') then
+        RAISE;
+       END IF;
+       RAISE;
+      end;
+      --
+
+      
+  end for;
+  close job_cursor;
+  return 'executed all jobs successfully for '||glue_job_name;
+EXCEPTION
+  WHEN statement_error THEN
+    RETURN OBJECT_CONSTRUCT('Error type', 'STATEMENT_ERROR',
+                            'SQLCODE', sqlcode,
+                            'SQLERRM', sqlerrm,
+                            'SQLSTATE', sqlstate);
+  WHEN my_exception THEN
+    RETURN OBJECT_CONSTRUCT('Error type', 'MY_EXCEPTION',
+                            'SQLCODE', sqlcode,
+                            'SQLERRM', sqlerrm,
+                            'SQLSTATE', sqlstate);
+  WHEN OTHER THEN
+    RETURN OBJECT_CONSTRUCT('Error type', 'Other error',
+                            'SQLCODE', sqlcode,
+                            'SQLERRM', sqlerrm,
+                            'SQLSTATE', sqlstate);  
+end;
+$$;
+
+----log table proc
+create or replace procedure dwh.etl.log_stored_procs(SEQ_NO number ,RUN_DATE date ,GLUE_JOB_NAME text ,PROC_NAME text ,START_TIME timestamp ,END_TIME timestamp ,STATUS text ,OUTPUT_LOG text ,ERROR_LOG text ,PARAM_LIST text ,PARAM_FUNCTION text ,PROC_SEQ text ,RUN_FLAG text ,OWNER_NAME text ,CREATED_BY text ,CREATED_ON date)
+returns text
+language sql
+as
+$$
+declare
+  my_exception EXCEPTION (-20002, 'Raised MY_EXCEPTION.');
+  
+begin
+  insert into JOB_CONTROL_EXECUTION_LOG
+(SEQ_NO,RUN_DATE,GLUE_JOB_NAME,PROC_NAME,START_TIME,END_TIME,STATUS,OUTPUT_LOG,ERROR_LOG,PARAM_LIST,PARAM_FUNCTION,PROC_SEQ,RUN_FLAG,OWNER_NAME,CREATED_BY,CREATED_ON)
+values (:SEQ_NO,:RUN_DATE,:GLUE_JOB_NAME,:PROC_NAME,:START_TIME,:END_TIME,:STATUS,:OUTPUT_LOG,:ERROR_LOG,:PARAM_LIST,:PARAM_FUNCTION,:PROC_SEQ,:RUN_FLAG,:OWNER_NAME,:CREATED_BY,:CREATED_ON);
+ COMMIT;
+  return 'executed all jobs successfully for '||glue_job_name;
+EXCEPTION
+  WHEN statement_error THEN
+    RETURN OBJECT_CONSTRUCT('Error type', 'STATEMENT_ERROR',
+                            'SQLCODE', sqlcode,
+                            'SQLERRM', sqlerrm,
+                            'SQLSTATE', sqlstate);
+  WHEN my_exception THEN
+    RETURN OBJECT_CONSTRUCT('Error type', 'MY_EXCEPTION',
+                            'SQLCODE', sqlcode,
+                            'SQLERRM', sqlerrm,
+                            'SQLSTATE', sqlstate);
+  WHEN OTHER THEN
+    RETURN OBJECT_CONSTRUCT('Error type', 'Other error',
+                            'SQLCODE', sqlcode,
+                            'SQLERRM', sqlerrm,
+                            'SQLSTATE', sqlstate);  
+end;
+$$;
+
+---call dwh.etl.log_stored_procs(2,sysdate(),'test','test',sysdate(),sysdate(),'Y','test','test','test','test',3,'Y','test','test',sysdate());
+
+--call dwh.etl.log_stored_procs(V_SEQ_NO,V_RUN_DATE,V_GLUE_JOB_NAME,V_PROC_NAME,V_START_TIME,V_END_TIME,'Y',V_OUTPUT_LOG ,V_ERROR_LOG ,V_PARAM_LIST ,V_PARAM_FUNCTION ,V_PROC_SEQ ,V_RUN_FLAG ,V_OWNER_NAME,V_CREATED_BY ,V_CREATED_ON);
+
+----=====================================main execution=========================================--------
+-----------validate data in control table 
+
+select * from ETL.JOB_CONTROL ;
+
+---1 scenario success all
+call execute_stored_procs_sp('invoce_records_load_dev');
+select * from ETL.JOB_CONTROL_EXECUTION_LOG order by 1;
+
+---2 scenario one failed
+
+update ETL.JOB_CONTROL set proc_name='dwh.etl.SP_LOAD_DIM_THREEE' where seq_no=301;
+call execute_stored_procs_sp('invoce_records_load_dev');
+select * from ETL.JOB_CONTROL_EXECUTION_LOG order by 1;
+
+
+
+
+
+------------test faile -----------
+CREATE OR REPLACE PROCEDURE dwh.etl.SP_LOAD_DIM(message VARCHAR)
+RETURNS VARCHAR NOT NULL
+LANGUAGE SQL
+AS
+$$
+BEGIN
+    insert into collision_report_table values ('G', 'Self', '2023-01-25 17:10:00'::timestamp), ('G2', 'At fault', 1);
+  insert into collision_report_table values ('G', 'Self', '2023-01-25 17:10:00'::timestamp), ('G2', 'At fault', sysdate()::timestamp);
+  insert into collision_report_table values ('G', 'Self', '2023-01-25 17:10:00'::timestamp), ('G2', 'At fault', sysdate()::timestamp);
+  insert into collision_report_table values ('G', 'Self', '2023-01-25 17:10:00'::timestamp), ('G2', 'At fault', sysdate()::timestamp);
+  insert into collision_report_table values ('G', 'Self', '2023-01-25 17:10:00'::timestamp), ('G2', 'At fault', sysdate()::timestamp);
+  insert into collision_report_table values ('G', 'Self', '2023-01-25 17:10:00'::timestamp), ('G2', 'At fault', sysdate()::timestamp);
+  insert into collision_report_table values ('G', 'Self', '2023-01-25 17:10:00'::timestamp), ('G2', 'At fault', sysdate()::timestamp);
+  insert into collision_report_table values ('G', 'Self', '2023-01-25 17:10:00'::timestamp), ('G2', 'At fault', sysdate()::timestamp);
+
+  insert into collision_report_table values ('G', 'Self', '2023-01-25 17:10:00'::timestamp), ('G2', 'At fault', sysdate()::timestamp);
+  RETURN 1;
+END;
+$$
+;
+
+
+
+--------final code version with run handle---------------------
+
+create or replace procedure DWH.ETL.execute_stored_procs_sp(glue_job_name text)
+returns text
+language sql
+as
+$$
+declare
+  my_exception EXCEPTION (-20002, 'Raised MY_EXCEPTION.');
+  job_cursor cursor for select proc_name||'('''||param_list||''')' as prc,seq_no,GLUE_JOB_NAME,PROC_NAME,PARAM_LIST,PARAM_FUNCTION,PROC_SEQ,RUN_FLAG
+  ,OWNER_NAME,CREATED_BY,CREATED_ON from ETL.JOB_CONTROL where lower(glue_job_name ) = ? and upper(run_flag)='Y' order by PROC_SEQ;
+  etl_seq number;
+  JOB_ID DEFAULT ( SELECT ETL_SEQ.NEXTVAL );
+  my_id text;
+  my_label text;
+  my_sql text;
+  V_MESSAGE_OUTPUT text default 'Completed';
+  V_SEQ_NO  number;
+  V_RUN_DATE  default sysdate();
+  V_GLUE_JOB_NAME  text;
+  V_PROC_NAME  text;
+  V_START_TIME  timestamp;
+  V_END_TIME  timestamp;
+  V_STATUS  text;
+  V_OUTPUT_LOG  text;
+  V_ERROR_LOG  text;
+  V_PARAM_LIST  text;
+  V_PARAM_FUNCTION  text;
+  V_PROC_SEQ  text;
+  V_RUN_FLAG  text;
+  V_OWNER_NAME  text;
+  V_CREATED_BY  text;
+  V_CREATED_ON  date;
+  V_FAIL_ON_EXCEP text default 'N';
+  V_JOB_SEQ_NO number;
+  V_RUN_CHECK number;
+  V_RUNNING_PROC_NAMES text;
+begin
+  V_RUN_CHECK := (select count(1) from ETL.JOB_CONTROL_EXECUTION_LOG where  glue_job_name= :glue_job_name and status='R' and start_time>CURRENT_DATE() );
+
+  if (V_RUN_CHECK = 0) then
+  open job_cursor using (glue_job_name);
+  for myrow in job_cursor do
+      V_SEQ_NO:= JOB_ID ;
+      V_GLUE_JOB_NAME  := myrow.GLUE_JOB_NAME;
+      V_PROC_NAME  := myrow.PROC_NAME;
+      V_START_TIME  :=sysdate();
+      V_END_TIME  :=null;
+      V_STATUS  :='R';
+      V_OUTPUT_LOG  :=' running ';
+      V_ERROR_LOG  := ' none';
+      V_PARAM_LIST  := myrow.PARAM_LIST;
+      V_PARAM_FUNCTION  :=myrow.PARAM_FUNCTION;
+      V_PROC_SEQ  := myrow.PROC_SEQ;
+      V_RUN_FLAG  := myrow.RUN_FLAG;
+      V_OWNER_NAME  := myrow.owner_name;
+      V_CREATED_BY  := myrow.created_by;
+      V_CREATED_ON  := myrow.created_on;
+      my_sql := 'call '||myrow.prc;
+      V_JOB_SEQ_NO := myrow.seq_no;
+      insert into JOB_CONTROL_EXECUTION_LOG values(:V_SEQ_NO,:V_RUN_DATE,:V_GLUE_JOB_NAME,:V_PROC_NAME,:V_START_TIME,:V_END_TIME,'R',:V_OUTPUT_LOG ,:V_ERROR_LOG ,:V_PARAM_LIST ,:V_PARAM_FUNCTION ,:V_PROC_SEQ ,:V_RUN_FLAG ,:V_OWNER_NAME,:V_CREATED_BY ,:V_CREATED_ON);
+      begin
+      execute immediate :my_sql;
+      UPDATE JOB_CONTROL_EXECUTION_LOG set STATUS='Y',END_TIME=sysdate(),OUTPUT_LOG=:V_MESSAGE_OUTPUT where SEQ_NO=:V_SEQ_NO and PROC_NAME=:V_PROC_NAME;
+      exception when other then
+      V_FAIL_ON_EXCEP := (select FAIL_ON_EXCEPTION from ETL.JOB_CONTROL  where glue_job_name=:V_GLUE_JOB_NAME and proc_name=:V_PROC_NAME and seq_no=:V_JOB_SEQ_NO) ;  
+      UPDATE JOB_CONTROL_EXECUTION_LOG set STATUS='F',END_TIME=sysdate(),OUTPUT_LOG='FAILED V_FAIL_ON_EXCEP as '||:V_FAIL_ON_EXCEP,ERROR_LOG=:SQLERRM where SEQ_NO=:V_SEQ_NO and PROC_NAME=:V_PROC_NAME;
+      
+       if (V_FAIL_ON_EXCEP='Y') then
+        RAISE;
+       END IF;
+       RAISE;
+      end;
+      --
+
+      
+  end for;
+  close job_cursor;
+  return 'executed all jobs successfully for '||glue_job_name;
+  else
+     V_RUNNING_PROC_NAMES := (select listagg(PROC_NAME,' , ') WITHIN GROUP (ORDER BY PROC_SEQ) from ETL.JOB_CONTROL_EXECUTION_LOG where  glue_job_name= :glue_job_name and status='R' and start_time>CURRENT_DATE());
+     return 'Glue job '||glue_job_name||' is running for '||V_RUNNING_PROC_NAMES|| ' proc';
+  end if;
+EXCEPTION
+  WHEN statement_error THEN
+    RETURN OBJECT_CONSTRUCT('Error type', 'STATEMENT_ERROR',
+                            'SQLCODE', sqlcode,
+                            'SQLERRM', sqlerrm,
+                            'SQLSTATE', sqlstate);
+  WHEN my_exception THEN
+    RETURN OBJECT_CONSTRUCT('Error type', 'MY_EXCEPTION',
+                            'SQLCODE', sqlcode,
+                            'SQLERRM', sqlerrm,
+                            'SQLSTATE', sqlstate);
+  WHEN OTHER THEN
+    RETURN OBJECT_CONSTRUCT('Error type', 'Other error',
+                            'SQLCODE', sqlcode,
+                            'SQLERRM', sqlerrm,
+                            'SQLSTATE', sqlstate);  
+end;
+$$;
+
+
+-----------running --code----------
+
+CREATE OR REPLACE PROCEDURE DWH.ETL.EXECUTE_STORED_PROCS_SP("GLUE_JOB_NAME" VARCHAR(16777216))
+RETURNS VARCHAR(16777216)
+LANGUAGE SQL
+EXECUTE AS CALLER
+AS '
+declare
+  my_exception EXCEPTION (-20002, ''Raised MY_EXCEPTION.'');
+  job_cursor cursor for select proc_name||''(''''''||param_list||'''''')'' as prc,seq_no,GLUE_JOB_NAME,PROC_NAME,PARAM_LIST,PARAM_FUNCTION,PROC_SEQ,RUN_FLAG
+  ,OWNER_NAME,CREATED_BY,CREATED_ON from ETL.JOB_CONTROL where lower(glue_job_name ) = ? and upper(run_flag)=''Y'' order by PROC_SEQ;
+  etl_seq number;
+  JOB_ID DEFAULT ( SELECT ETL_SEQ.NEXTVAL );
+  my_id text;
+  my_label text;
+  my_sql text;
+  V_MESSAGE_OUTPUT text default ''Completed'';
+  V_SEQ_NO  number;
+  V_RUN_DATE  default sysdate();
+  V_GLUE_JOB_NAME  text;
+  V_PROC_NAME  text;
+  V_START_TIME  timestamp;
+  V_END_TIME  timestamp;
+  V_STATUS  text;
+  V_OUTPUT_LOG  text;
+  V_ERROR_LOG  text;
+  V_PARAM_LIST  text;
+  V_PARAM_FUNCTION  text;
+  V_PROC_SEQ  text;
+  V_RUN_FLAG  text;
+  V_OWNER_NAME  text;
+  V_CREATED_BY  text;
+  V_CREATED_ON  date;
+  V_FAIL_ON_EXCEP text default ''N'';
+  V_JOB_SEQ_NO number;
+  V_RUN_CHECK number ;
+  V_RUNNING_PROC_NAMES text;
+begin
+  V_RUN_CHECK := (select count(1) from ETL.JOB_CONTROL_EXECUTION_LOG where  glue_job_name= :glue_job_name and status=''R'' and start_time>CURRENT_DATE() ); 
+  
+ if (V_RUN_CHECK = 0) then
+  
+  open job_cursor using (glue_job_name);
+  for myrow in job_cursor do
+      V_SEQ_NO:= JOB_ID ;
+      V_GLUE_JOB_NAME  := myrow.GLUE_JOB_NAME;
+      V_PROC_NAME  := myrow.PROC_NAME;
+      V_START_TIME  :=sysdate();
+      V_END_TIME  :=null;
+      V_STATUS  :=''R'';
+      V_OUTPUT_LOG  :='' running '';
+      V_ERROR_LOG  := '' none'';
+      V_PARAM_LIST  := myrow.PARAM_LIST;
+      V_PARAM_FUNCTION  :=myrow.PARAM_FUNCTION;
+      V_PROC_SEQ  := myrow.PROC_SEQ;
+      V_RUN_FLAG  := myrow.RUN_FLAG;
+      V_OWNER_NAME  := myrow.owner_name;
+      V_CREATED_BY  := myrow.created_by;
+      V_CREATED_ON  := myrow.created_on;
+      my_sql := ''call ''||myrow.prc;
+      V_JOB_SEQ_NO := myrow.seq_no;
+      insert into ETL.JOB_CONTROL_EXECUTION_LOG values(:V_SEQ_NO,:V_RUN_DATE,:V_GLUE_JOB_NAME,:V_PROC_NAME,:V_START_TIME,:V_END_TIME,''R'',:V_OUTPUT_LOG ,:V_ERROR_LOG ,:V_PARAM_LIST ,:V_PARAM_FUNCTION ,:V_PROC_SEQ ,:V_RUN_FLAG ,:V_OWNER_NAME,:V_CREATED_BY ,:V_CREATED_ON);
+      begin
+      execute immediate :my_sql;
+      UPDATE ETL.JOB_CONTROL_EXECUTION_LOG set STATUS=''Y'',END_TIME=sysdate(),OUTPUT_LOG=:V_MESSAGE_OUTPUT where SEQ_NO=:V_SEQ_NO and PROC_NAME=:V_PROC_NAME;
+      exception when other then
+      V_FAIL_ON_EXCEP := (select FAIL_ON_EXCEPTION from ETL.JOB_CONTROL  where glue_job_name=:V_GLUE_JOB_NAME and proc_name=:V_PROC_NAME and seq_no=:V_JOB_SEQ_NO) ;  
+      UPDATE JOB_CONTROL_EXECUTION_LOG set STATUS=''F'',END_TIME=sysdate(),OUTPUT_LOG=''FAILED V_FAIL_ON_EXCEP as ''||:V_FAIL_ON_EXCEP,ERROR_LOG=:SQLERRM where SEQ_NO=:V_SEQ_NO and PROC_NAME=:V_PROC_NAME;
+      
+       
+       RAISE;
+      end;
+      --
+
+      
+  end for;
+  close job_cursor;
+  return ''executed all jobs successfully for ''||glue_job_name;
+else
+     V_RUNNING_PROC_NAMES := (select listagg(PROC_NAME,'' , '') WITHIN GROUP (ORDER BY PROC_SEQ) from ETL.JOB_CONTROL_EXECUTION_LOG where  glue_job_name= :glue_job_name and status=''R'' and start_time>CURRENT_DATE());
+     return ''Glue job ''||glue_job_name||'' is running for ''||V_RUNNING_PROC_NAMES|| '' proc'';
+end if;
+  
+EXCEPTION
+  WHEN statement_error THEN
+    RETURN OBJECT_CONSTRUCT(''Error type'', ''STATEMENT_ERROR'',
+                            ''SQLCODE'', sqlcode,
+                            ''SQLERRM'', sqlerrm,
+                            ''SQLSTATE'', sqlstate);
+  WHEN my_exception THEN
+    RETURN OBJECT_CONSTRUCT(''Error type'', ''MY_EXCEPTION'',
+                            ''SQLCODE'', sqlcode,
+                            ''SQLERRM'', sqlerrm,
+                            ''SQLSTATE'', sqlstate);
+  WHEN OTHER THEN
+    RETURN OBJECT_CONSTRUCT(''Error type'', ''Other error'',
+                            ''SQLCODE'', sqlcode,
+                            ''SQLERRM'', sqlerrm,
+                            ''SQLSTATE'', sqlstate);  
+end;
+';
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+--------------
+
+CREATE OR REPLACE PROCEDURE DWH.ETL.SP_LOAD_DIM_THREE("MESSAGE" VARCHAR(16777216))
+RETURNS VARCHAR(16777216)
+LANGUAGE SQL
+EXECUTE AS OWNER
+AS '
+BEGIN
+  insert into collision_report_table values (''G'', ''Self'', ''2023-01-25 17:10:00''::timestamp), (''G3'', ''At fault'', sysdate()::timestamp);
+  insert into collision_report_table values (''G'', ''Self'', ''2023-01-25 17:10:00''::timestamp), (''G3'', ''At fault'', sysdate()::timestamp);
+  insert into collision_report_table values (''G'', ''Self'', ''2023-01-25 17:10:00''::timestamp), (''G3'', ''At fault'', sysdate()::timestamp);
+  insert into collision_report_table values (''G'', ''Self'', ''2023-01-25 17:10:00''::timestamp), (''G3'', ''At fault'', sysdate()::timestamp);
+  insert into collision_report_table values (''G'', ''Self'', ''2023-01-25 17:10:00''::timestamp), (''G3'', ''At fault'', sysdate()::timestamp);
+  insert into collision_report_table values (''G'', ''Self'', ''2023-01-25 17:10:00''::timestamp), (''G3'', ''At fault'', sysdate()::timestamp);
+insert into collision_report_table values (''G'', ''Self'', ''2023-01-25 17:10:00''::timestamp), (''G3'', ''At fault'', sysdate()::timestamp);
+  insert into collision_report_table values (''G'', ''Self'', ''2023-01-25 17:10:00''::timestamp), (''G3'', ''At fault'', sysdate()::timestamp);
+  insert into collision_report_table values (''G'', ''Self'', ''2023-01-25 17:10:00''::timestamp), (''G3'', ''At fault'', sysdate()::timestamp);
+  insert into collision_report_table values (''G'', ''Self'', ''2023-01-25 17:10:00''::timestamp), (''G3'', ''At fault'', sysdate()::timestamp);
+  insert into collision_report_table values (''G'', ''Self'', ''2023-01-25 17:10:00''::timestamp), (''G3'', ''At fault'', sysdate()::timestamp);
+  insert into collision_report_table values (''G'', ''Self'', ''2023-01-25 17:10:00''::timestamp), (''G3'', ''At fault'', sysdate()::timestamp);
+insert into collision_report_table values (''G'', ''Self'', ''2023-01-25 17:10:00''::timestamp), (''G3'', ''At fault'', sysdate()::timestamp);
+  insert into collision_report_table values (''G'', ''Self'', ''2023-01-25 17:10:00''::timestamp), (''G3'', ''At fault'', sysdate()::timestamp);
+  insert into collision_report_table values (''G'', ''Self'', ''2023-01-25 17:10:00''::timestamp), (''G3'', ''At fault'', sysdate()::timestamp);
+  insert into collision_report_table values (''G'', ''Self'', ''2023-01-25 17:10:00''::timestamp), (''G3'', ''At fault'', sysdate()::timestamp);
+  insert into collision_report_table values (''G'', ''Self'', ''2023-01-25 17:10:00''::timestamp), (''G3'', ''At fault'', sysdate()::timestamp);
+  insert into collision_report_table values (''G'', ''Self'', ''2023-01-25 17:10:00''::timestamp), (''G3'', ''At fault'', sysdate()::timestamp);
+insert into collision_report_table values (''G'', ''Self'', ''2023-01-25 17:10:00''::timestamp), (''G3'', ''At fault'', sysdate()::timestamp);
+  insert into collision_report_table values (''G'', ''Self'', ''2023-01-25 17:10:00''::timestamp), (''G3'', ''At fault'', sysdate()::timestamp);
+  insert into collision_report_table values (''G'', ''Self'', ''2023-01-25 17:10:00''::timestamp), (''G3'', ''At fault'', sysdate()::timestamp);
+  insert into collision_report_table values (''G'', ''Self'', ''2023-01-25 17:10:00''::timestamp), (''G3'', ''At fault'', sysdate()::timestamp);
+  insert into collision_report_table values (''G'', ''Self'', ''2023-01-25 17:10:00''::timestamp), (''G3'', ''At fault'', sysdate()::timestamp);
+  insert into collision_report_table values (''G'', ''Self'', ''2023-01-25 17:10:00''::timestamp), (''G3'', ''At fault'', sysdate()::timestamp);
+insert into collision_report_table values (''G'', ''Self'', ''2023-01-25 17:10:00''::timestamp), (''G3'', ''At fault'', sysdate()::timestamp);
+  insert into collision_report_table values (''G'', ''Self'', ''2023-01-25 17:10:00''::timestamp), (''G3'', ''At fault'', sysdate()::timestamp);
+  insert into collision_report_table values (''G'', ''Self'', ''2023-01-25 17:10:00''::timestamp), (''G3'', ''At fault'', sysdate()::timestamp);
+  insert into collision_report_table values (''G'', ''Self'', ''2023-01-25 17:10:00''::timestamp), (''G3'', ''At fault'', sysdate()::timestamp);
+  insert into collision_report_table values (''G'', ''Self'', ''2023-01-25 17:10:00''::timestamp), (''G3'', ''At fault'', sysdate()::timestamp);
+  insert into collision_report_table values (''G'', ''Self'', ''2023-01-25 17:10:00''::timestamp), (''G3'', ''At fault'', sysdate()::timestamp);
+insert into collision_report_table values (''G'', ''Self'', ''2023-01-25 17:10:00''::timestamp), (''G3'', ''At fault'', sysdate()::timestamp);
+  insert into collision_report_table values (''G'', ''Self'', ''2023-01-25 17:10:00''::timestamp), (''G3'', ''At fault'', sysdate()::timestamp);
+  insert into collision_report_table values (''G'', ''Self'', ''2023-01-25 17:10:00''::timestamp), (''G3'', ''At fault'', sysdate()::timestamp);
+  insert into collision_report_table values (''G'', ''Self'', ''2023-01-25 17:10:00''::timestamp), (''G3'', ''At fault'', sysdate()::timestamp);
+  insert into collision_report_table values (''G'', ''Self'', ''2023-01-25 17:10:00''::timestamp), (''G3'', ''At fault'', sysdate()::timestamp);
+  insert into collision_report_table values (''G'', ''Self'', ''2023-01-25 17:10:00''::timestamp), (''G3'', ''At fault'', sysdate()::timestamp);
+insert into collision_report_table values (''G'', ''Self'', ''2023-01-25 17:10:00''::timestamp), (''G3'', ''At fault'', sysdate()::timestamp);
+  insert into collision_report_table values (''G'', ''Self'', ''2023-01-25 17:10:00''::timestamp), (''G3'', ''At fault'', sysdate()::timestamp);
+  insert into collision_report_table values (''G'', ''Self'', ''2023-01-25 17:10:00''::timestamp), (''G3'', ''At fault'', sysdate()::timestamp);
+  insert into collision_report_table values (''G'', ''Self'', ''2023-01-25 17:10:00''::timestamp), (''G3'', ''At fault'', sysdate()::timestamp);
+  insert into collision_report_table values (''G'', ''Self'', ''2023-01-25 17:10:00''::timestamp), (''G3'', ''At fault'', sysdate()::timestamp);
+  insert into collision_report_table values (''G'', ''Self'', ''2023-01-25 17:10:00''::timestamp), (''G3'', ''At fault'', sysdate()::timestamp);
+insert into collision_report_table values (''G'', ''Self'', ''2023-01-25 17:10:00''::timestamp), (''G3'', ''At fault'', sysdate()::timestamp);
+  insert into collision_report_table values (''G'', ''Self'', ''2023-01-25 17:10:00''::timestamp), (''G3'', ''At fault'', sysdate()::timestamp);
+  insert into collision_report_table values (''G'', ''Self'', ''2023-01-25 17:10:00''::timestamp), (''G3'', ''At fault'', sysdate()::timestamp);
+  insert into collision_report_table values (''G'', ''Self'', ''2023-01-25 17:10:00''::timestamp), (''G3'', ''At fault'', sysdate()::timestamp);
+  insert into collision_report_table values (''G'', ''Self'', ''2023-01-25 17:10:00''::timestamp), (''G3'', ''At fault'', sysdate()::timestamp);
+  insert into collision_report_table values (''G'', ''Self'', ''2023-01-25 17:10:00''::timestamp), (''G3'', ''At fault'', sysdate()::timestamp);
+insert into collision_report_table values (''G'', ''Self'', ''2023-01-25 17:10:00''::timestamp), (''G3'', ''At fault'', sysdate()::timestamp);
+  insert into collision_report_table values (''G'', ''Self'', ''2023-01-25 17:10:00''::timestamp), (''G3'', ''At fault'', sysdate()::timestamp);
+  insert into collision_report_table values (''G'', ''Self'', ''2023-01-25 17:10:00''::timestamp), (''G3'', ''At fault'', sysdate()::timestamp);
+  insert into collision_report_table values (''G'', ''Self'', ''2023-01-25 17:10:00''::timestamp), (''G3'', ''At fault'', sysdate()::timestamp);
+  insert into collision_report_table values (''G'', ''Self'', ''2023-01-25 17:10:00''::timestamp), (''G3'', ''At fault'', sysdate()::timestamp);
+  insert into collision_report_table values (''G'', ''Self'', ''2023-01-25 17:10:00''::timestamp), (''G3'', ''At fault'', sysdate()::timestamp);
+
+  RETURN message;
+END;
+';
